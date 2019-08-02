@@ -1,9 +1,61 @@
 {{define "yield"}}
     <h1>Common FAQ</h1>
 
-    <p><b>What is gophr.com</b></p>
-    </p>It is an image sharing website made with GoLang / Go.</p>
-
-    <p><b>Some other question ?</b></p>
-    <p>Some other answer</p>
+    <div class="container ">
+        <div class="panel-group" id="faqAccordion">
+            <div class="panel panel-default ">
+                <div class="panel-heading accordion-toggle question-toggle collapsed" data-toggle="collapse" data-parent="#faqAccordion" data-target="#question0">
+                    <h4 class="panel-title">
+                        <a href="#" class="ing">Q: What is Gophr?</a>
+                    </h4>
+                </div>
+                <div id="question0" class="panel-collapse collapse" style="height: 0px;">
+                    <div class="panel-body">
+                    <h5><span class="label label-primary">Answer</span></h5>
+                        <p>Gophr is an image sharing website made with Go / GoLang.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default ">
+                <div class="panel-heading accordion-toggle collapsed question-toggle" data-toggle="collapse" data-parent="#faqAccordion" data-target="#question1">
+                    <h4 class="panel-title">
+                        <a href="#" class="ing">Q: Why do we use it?</a>
+                    </h4>
+                </div>
+                <div id="question1" class="panel-collapse collapse" style="height: 0px;">
+                    <div class="panel-body">
+                        <h5><span class="label label-primary">Answer</span></h5>
+                        <p> It enables you to share your photos and albums with ease.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default ">
+                <div class="panel-heading accordion-toggle collapsed question-toggle" data-toggle="collapse" data-parent="#faqAccordion" data-target="#question2">
+                    <h4 class="panel-title">
+                        <a href="#" class="ing">Q: How to contribute?</a>
+                    </h4>
+                </div>
+                <div id="question2" class="panel-collapse collapse" style="height: 0px;">
+                    <div class="panel-body">
+                        <h5><span class="label label-primary">Answer</span></h5>
+                        <p>Gophr is completely open source. Visit our repository at <a href="https://www.github.com/C-Anirudh/gophr.com" class="label label-success">https://www.github.com/C-Anirudh/gophr.com</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default ">
+                <div class="panel-heading accordion-toggle collapsed question-toggle" data-toggle="collapse" data-parent="#faqAccordion" data-target="#question3">
+                    <h4 class="panel-title">
+                        <a href="#" class="ing">Q: Lorem Ipsum</a>
+                    </h4>
+                </div>
+                <div id="question3" class="panel-collapse collapse" style="height: 0px;">
+                    <div class="panel-body">
+                        <h5><span class="label label-primary">Answer</span></h5>
+                        <p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {{end}}
