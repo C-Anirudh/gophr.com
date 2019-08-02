@@ -6,7 +6,7 @@ import (
 
 // NewView processes the template provided along with layuout files and stores in View type of the page
 func NewView(layout string, files ...string) *View {
-	files = append(files, "views/layouts/footer.gohtml", "views/layouts/base.gohtml")
+	files = append(files, "views/layouts/footer.gohtml", "views/layouts/base.gohtml", "views/layouts/navbar.gohtml")
 	t, err := template.ParseFiles(files...)
 	if err != nil {
 		panic(err)
