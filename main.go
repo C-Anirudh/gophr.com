@@ -19,28 +19,26 @@ func init() {
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := homeView.Template.ExecuteTemplate(w, homeView.Layout, nil); err != nil {
-		panic(err)
-	}
+	must(homeView.Render(w, nil))
 }
 
 func contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := contactView.Template.ExecuteTemplate(w, contactView.Layout, nil); err != nil {
-		panic(err)
-	}
+	must(contactView.Render(w, nil))
 }
 
 func faq(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := faqView.Template.ExecuteTemplate(w, faqView.Layout, nil); err != nil {
-		panic(err)
-	}
+	must(faqView.Render(w, nil))
 }
 
 func error404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := error404View.Template.ExecuteTemplate(w, error404View.Layout, nil); err != nil {
+	must(error404View.Render(w, nil))
+}
+
+func must(err error) {
+	if err != nil {
 		panic(err)
 	}
 }
