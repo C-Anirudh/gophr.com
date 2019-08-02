@@ -8,7 +8,7 @@ import (
 
 var (
 	// LayoutDir has the path to the directory containing the layout files
-	LayoutDir = "views/layouts"
+	LayoutDir = "views/layouts/"
 
 	// TemplateDir has the path to the directory containing the templates
 	TemplateDir = "views/"
