@@ -19,38 +19,38 @@ func init() {
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := homeView.Template.Execute(w, nil); err != nil {
+	if err := homeView.Template.ExecuteTemplate(w, homeView.Layout, nil); err != nil {
 		panic(err)
 	}
 }
 
 func contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := contactView.Template.Execute(w, nil); err != nil {
+	if err := contactView.Template.ExecuteTemplate(w, contactView.Layout, nil); err != nil {
 		panic(err)
 	}
 }
 
 func faq(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := faqView.Template.Execute(w, nil); err != nil {
+	if err := faqView.Template.ExecuteTemplate(w, faqView.Layout, nil); err != nil {
 		panic(err)
 	}
 }
 
 func error404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := error404View.Template.Execute(w, nil); err != nil {
+	if err := error404View.Template.ExecuteTemplate(w, error404View.Layout, nil); err != nil {
 		panic(err)
 	}
 }
 
 func main() {
 	var err404 = http.HandlerFunc(error404)
-	homeView = views.NewView("views/home.gohtml")
-	contactView = views.NewView("views/contact.gohtml")
-	faqView = views.NewView("views/faq.gohtml")
-	error404View = views.NewView("views/error404.gohtml")
+	homeView = views.NewView("base", "views/home.gohtml")
+	contactView = views.NewView("base", "views/contact.gohtml")
+	faqView = views.NewView("base", "views/faq.gohtml")
+	error404View = views.NewView("base", "views/error404.gohtml")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
