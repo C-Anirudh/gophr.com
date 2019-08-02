@@ -1,14 +1,15 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
+
+	"gophr.com/views"
 
 	"github.com/gorilla/mux"
 )
 
-var homeTemplate, contactTemplate, faqTemplate, error404Template *template.Template
+var homeView, contactView, faqView, error404View *views.View
 
 func init() {
 	log.SetPrefix("LOG: ")
@@ -18,51 +19,39 @@ func init() {
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := homeTemplate.Execute(w, nil); err != nil {
+	if err := homeView.Template.Execute(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := contactTemplate.Execute(w, nil); err != nil {
+	if err := contactView.Template.Execute(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func faq(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := faqTemplate.Execute(w, nil); err != nil {
+	if err := faqView.Template.Execute(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func error404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := error404Template.Execute(w, nil); err != nil {
+	if err := error404View.Template.Execute(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func main() {
-	var err error
 	var err404 = http.HandlerFunc(error404)
-	homeTemplate, err = template.ParseFiles("views/home.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	contactTemplate, err = template.ParseFiles("views/contact.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	faqTemplate, err = template.ParseFiles("views/faq.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	error404Template, err = template.ParseFiles("views/error404.gohtml")
-	if err != nil {
-		panic(err)
-	}
+	homeView = views.NewView("views/home.gohtml")
+	contactView = views.NewView("views/contact.gohtml")
+	faqView = views.NewView("views/faq.gohtml")
+	error404View = views.NewView("views/error404.gohtml")
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
