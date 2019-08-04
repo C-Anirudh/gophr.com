@@ -4,12 +4,14 @@ import (
 	"log"
 	"net/http"
 
+	"gophr.com/controllers"
+
 	"gophr.com/views"
 
 	"github.com/gorilla/mux"
 )
 
-var homeView, contactView, faqView, error404View, signupView *views.View
+var homeView, contactView, faqView, error404View *views.View
 
 func init() {
 	log.SetPrefix("LOG: ")
@@ -32,11 +34,6 @@ func faq(w http.ResponseWriter, r *http.Request) {
 	must(faqView.Render(w, nil))
 }
 
-func signup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(signupView.Render(w, nil))
-}
-
 func error404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	must(error404View.Render(w, nil))
@@ -54,13 +51,14 @@ func main() {
 	contactView = views.NewView("base", "views/contact.gohtml")
 	faqView = views.NewView("base", "views/faq.gohtml")
 	error404View = views.NewView("base", "views/error404.gohtml")
-	signupView = views.NewView("base", "views/signup.gohtml")
+	usersC := controllers.NewUsers()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/contact", contact)
-	r.HandleFunc("/faq", faq)
-	r.HandleFunc("/signup", signup)
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/contact", contact).Methods("GET")
+	r.HandleFunc("/faq", faq).Methods("GET")
+	r.HandleFunc("/signup", usersC.New).Methods("GET")
+	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.NotFoundHandler = err404
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
