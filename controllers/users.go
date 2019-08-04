@@ -10,7 +10,7 @@ import (
 // NewUsers parses the templates related to the user and stores them in Users struct
 func NewUsers() *Users {
 	return &Users{
-		NewView: views.NewView("base", "views/users/new.gohtml"),
+		NewView: views.NewView("base", "users/new"),
 	}
 }
 

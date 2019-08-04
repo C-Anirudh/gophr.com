@@ -17,6 +17,12 @@ var (
 	TemplateExt = ".gohtml"
 )
 
+// View is a struct that holds the processed template of a static page
+type View struct {
+	Template *template.Template
+	Layout   string
+}
+
 func layoutFiles() []string {
 	files, err := filepath.Glob(LayoutDir + "*" + TemplateExt)
 	if err != nil {
@@ -25,8 +31,22 @@ func layoutFiles() []string {
 	return files
 }
 
+func addTemplatePath(files []string) {
+	for i, f := range files {
+		files[i] = TemplateDir + f
+	}
+}
+
+func addTemplateExt(files []string) {
+	for i, f := range files {
+		files[i] = f + TemplateExt
+	}
+}
+
 // NewView processes the template provided along with layuout files and stores in View type of the page
 func NewView(layout string, files ...string) *View {
+	addTemplatePath(files)
+	addTemplateExt(files)
 	files = append(files, layoutFiles()...)
 	t, err := template.ParseFiles(files...)
 	if err != nil {
@@ -36,12 +56,6 @@ func NewView(layout string, files ...string) *View {
 		Template: t,
 		Layout:   layout,
 	}
-}
-
-// View is a struct that holds the processed template of a static page
-type View struct {
-	Template *template.Template
-	Layout   string
 }
 
 // Render executes the parsed template that is passed to it

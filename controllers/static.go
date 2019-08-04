@@ -7,10 +7,10 @@ import (
 // NewStatic processes templates of static pages and assigns them to a Static type
 func NewStatic() *Static {
 	return &Static{
-		Home:     views.NewView("base", "views/static/home.gohtml"),
-		Contact:  views.NewView("base", "views/static/contact.gohtml"),
-		Faq:      views.NewView("base", "views/static/faq.gohtml"),
-		Error404: views.NewView("base", "views/static/error404.gohtml"),
+		Home:     views.NewView("base", "static/home"),
+		Contact:  views.NewView("base", "static/contact"),
+		Faq:      views.NewView("base", "static/faq"),
+		Error404: views.NewView("base", "static/error404"),
 	}
 }
 
