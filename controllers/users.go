@@ -21,11 +21,23 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Create will parse the sign up form and create a new user
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "From create function in user controller")
+	var form SignupForm
+	if err := parseForm(r, &form); err != nil {
+		panic(err)
+	}
+	fmt.Fprintln(w, "Email is", form.Email)
+	fmt.Fprintln(w, "Password is", form.Password)
 }
 
 // Users will hold processed templates related to user operations
 type Users struct {
 	NewView *views.View
+}
+
+// SignupForm contains the details entered by the user in the signup form
+type SignupForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
 }
