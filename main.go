@@ -1,12 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"gophr.com/controllers"
+	"gophr.com/models"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = ""
+	dbname   = "gophr"
 )
 
 func init() {
@@ -16,7 +26,15 @@ func init() {
 }
 
 func main() {
-	usersC := controllers.NewUsers()
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	us, err := models.NewUserService(psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer us.Close()
+	us.AutoMigrate()
+
+	usersC := controllers.NewUsers(us)
 	staticC := controllers.NewStatic()
 
 	r := mux.NewRouter()
