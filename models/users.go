@@ -12,6 +12,9 @@ import (
 var (
 	// ErrNotFound is a custom error we return when a resource we are looking for is not present in the db
 	ErrNotFound = errors.New("models: resource not found")
+
+	// ErrInvalidID is a custom error we return when the id of user we want to delete is invalid
+	ErrInvalidID = errors.New("models: ID provided was invalid")
 )
 
 // User is the database model for our customer
@@ -82,4 +85,18 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+// Update is used to update user data in the db
+func (us *UserService) Update(user *User) error {
+	return us.db.Save(user).Error
+}
+
+// Delete is used to delete a user from the db
+func (us *UserService) Delete(id uint) error {
+	if id == 0 {
+		return ErrInvalidID
+	}
+	user := User{Model: gorm.Model{ID: id}}
+	return us.db.Delete(&user).Error
 }
