@@ -5,6 +5,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"golang.org/x/crypto/bcrypt"
+
 	// imported for the effects
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -15,13 +17,17 @@ var (
 
 	// ErrInvalidID is a custom error we return when the id of user we want to delete is invalid
 	ErrInvalidID = errors.New("models: ID provided was invalid")
+
+	userPwPepper = "secret-random-string"
 )
 
 // User is the database model for our customer
 type User struct {
 	gorm.Model
-	Name  string
-	Email string `gorm:"not null;unique_index"`
+	Name         string
+	Email        string `gorm:"not null;unique_index"`
+	Password     string `gorm:"-"`
+	PasswordHash string `gorm:"not null"`
 }
 
 // UserService stores the information required for abstracting functions related to the db
@@ -67,6 +73,13 @@ func (us *UserService) DestructiveReset() error {
 
 // Create is used to add a new user
 func (us *UserService) Create(user *User) error {
+	pwBytes := []byte(user.Password + userPwPepper)
+	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = string(hashedBytes)
+	user.Password = ""
 	return us.db.Create(user).Error
 }
 
