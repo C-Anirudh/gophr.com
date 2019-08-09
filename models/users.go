@@ -18,6 +18,9 @@ var (
 	// ErrInvalidID is a custom error we return when the id of user we want to delete is invalid
 	ErrInvalidID = errors.New("models: ID provided was invalid")
 
+	// ErrInvalidPassword is a custom error we return when the user enters an invalid password in login page
+	ErrInvalidPassword = errors.New("models: incorrect password provided")
+
 	userPwPepper = "secret-random-string"
 )
 
@@ -122,4 +125,22 @@ func (us *UserService) AutoMigrate() error {
 		return err
 	}
 	return nil
+}
+
+// Authenticate is used to vet users
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+userPwPepper))
+	switch err {
+	case nil:
+		return foundUser, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	default:
+		return nil, err
+	}
 }
