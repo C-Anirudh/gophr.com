@@ -45,6 +45,7 @@ func main() {
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.Handle("/login", usersC.LogInView).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
+	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	r.NotFoundHandler = staticC.Error404
 
 	log.Fatal(http.ListenAndServe(":8080", r))
