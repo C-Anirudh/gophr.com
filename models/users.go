@@ -167,3 +167,14 @@ func (us *UserService) Authenticate(email, password string) (*User, error) {
 		return nil, err
 	}
 }
+
+// ByRemember is used to search a user by remember token from the db
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	rememberHash := us.hmac.Hash(token)
+	err := first(us.db.Where("remember_hash = ?", rememberHash), &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
