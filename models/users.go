@@ -3,6 +3,9 @@ package models
 import (
 	"errors"
 
+	"gophr.com/hash"
+	"gophr.com/rand"
+
 	"github.com/jinzhu/gorm"
 
 	"golang.org/x/crypto/bcrypt"
@@ -24,6 +27,8 @@ var (
 	userPwPepper = "secret-random-string"
 )
 
+const hmacSecretKey = "secret-hmac-key"
+
 // User is the database model for our customer
 type User struct {
 	gorm.Model
@@ -31,11 +36,14 @@ type User struct {
 	Email        string `gorm:"not null;unique_index"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gorm:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null;unique_index"`
 }
 
 // UserService stores the information required for abstracting functions related to the db
 type UserService struct {
-	db *gorm.DB
+	db   *gorm.DB
+	hmac hash.HMAC
 }
 
 // NewUserService is an abstraction layer providing us a connection with the db
@@ -45,8 +53,10 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 		panic(err)
 	}
 	db.LogMode(true)
+	hmac := hash.NewHMAC(hmacSecretKey)
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
 }
 
@@ -83,6 +93,16 @@ func (us *UserService) Create(user *User) error {
 	}
 	user.PasswordHash = string(hashedBytes)
 	user.Password = ""
+
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+	user.RememberHash = us.hmac.Hash(user.Remember)
+
 	return us.db.Create(user).Error
 }
 
@@ -107,6 +127,9 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 
 // Update is used to update user data in the db
 func (us *UserService) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = us.hmac.Hash(user.Remember)
+	}
 	return us.db.Save(user).Error
 }
 
