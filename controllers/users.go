@@ -10,7 +10,7 @@ import (
 )
 
 // NewUsers parses the templates related to the user and stores them in Users struct
-func NewUsers(us *models.UserService) *Users {
+func NewUsers(us models.UserService) *Users {
 	return &Users{
 		NewView:   views.NewView("base", "users/new"),
 		LogInView: views.NewView("base", "users/login"),
@@ -119,7 +119,7 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 type Users struct {
 	NewView   *views.View
 	LogInView *views.View
-	us        *models.UserService
+	us        models.UserService
 }
 
 // SignupForm contains the details entered by the user in the signup form

@@ -40,20 +40,6 @@ type User struct {
 	RememberHash string `gorm:"not null;unique_index"`
 }
 
-// UserService stores the information required for abstracting functions related to the db
-type UserService struct {
-	UserDB
-}
-
-type userGorm struct {
-	db   *gorm.DB
-	hmac hash.HMAC
-}
-
-type userValidator struct {
-	UserDB
-}
-
 // UserDB is used to interact with the users database
 type UserDB interface {
 	// Methods for querying for single users
@@ -74,6 +60,25 @@ type UserDB interface {
 	DestructiveReset() error
 }
 
+// UserService is a set of methods used to manipulate and work with the user model
+type UserService interface {
+	Authenticate(email, password string) (*User, error)
+	UserDB
+}
+
+type userService struct {
+	UserDB
+}
+
+type userGorm struct {
+	db   *gorm.DB
+	hmac hash.HMAC
+}
+
+type userValidator struct {
+	UserDB
+}
+
 func newUserGorm(connectionInfo string) (*userGorm, error) {
 	db, err := gorm.Open("postgres", connectionInfo)
 	if err != nil {
@@ -88,12 +93,12 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 }
 
 // NewUserService is an abstraction layer providing us a connection with the db
-func NewUserService(connectionInfo string) (*UserService, error) {
+func NewUserService(connectionInfo string) (UserService, error) {
 	ug, err := newUserGorm(connectionInfo)
 	if err != nil {
 		return nil, err
 	}
-	return &UserService{
+	return &userService{
 		UserDB: &userValidator{
 			UserDB: ug,
 		},
@@ -191,7 +196,7 @@ func (ug *userGorm) AutoMigrate() error {
 }
 
 // Authenticate is used to vet users
-func (us *UserService) Authenticate(email, password string) (*User, error) {
+func (us *userService) Authenticate(email, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
 	if err != nil {
 		return nil, err
@@ -220,3 +225,4 @@ func (ug *userGorm) ByRemember(token string) (*User, error) {
 }
 
 var _ UserDB = &userGorm{}
+var _ UserService = &userService{}
