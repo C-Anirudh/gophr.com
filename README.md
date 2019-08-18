@@ -6,4 +6,4 @@
 [![GitHub stars](https://img.shields.io/github/stars/C-Anirudh/gophr.com.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/C-Anirudh/gophr.com/stargazers/) [![GitHub forks](https://img.shields.io/github/forks/C-Anirudh/gophr.com.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/C-Anirudh/gophr.com/network/) [![GitHub watchers](https://img.shields.io/github/watchers/C-Anirudh/gophr.com.svg?style=social&label=Watch&maxAge=2592000)](https://GitHub.com/C-Anirudh/gophr.com/watchers/)
 
 
-Gopher is an image sharing website made with Go (GoLang).
+Gopher is an image sharing website made with Go (GoLang).Users can log in, create albums and share it with the world!
