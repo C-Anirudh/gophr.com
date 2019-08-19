@@ -77,6 +77,7 @@ type userGorm struct {
 
 type userValidator struct {
 	UserDB
+	hmac hash.HMAC
 }
 
 func newUserGorm(connectionInfo string) (*userGorm, error) {
@@ -98,9 +99,14 @@ func NewUserService(connectionInfo string) (UserService, error) {
 	if err != nil {
 		return nil, err
 	}
+	hmac := hash.NewHMAC(hmacSecretKey)
+	uv := &userValidator{
+		hmac:   hmac,
+		UserDB: ug,
+	}
 	return &userService{
 		UserDB: &userValidator{
-			UserDB: ug,
+			UserDB: uv,
 		},
 	}, nil
 }
@@ -214,14 +220,18 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 }
 
 // ByRemember is used to search a user by remember token from the db
-func (ug *userGorm) ByRemember(token string) (*User, error) {
+func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	var user User
-	rememberHash := ug.hmac.Hash(token)
 	err := first(ug.db.Where("remember_hash = ?", rememberHash), &user)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (uv *userValidator) ByRemember(token string) (*User, error) {
+	rememberHash := uv.hmac.Hash(token)
+	return uv.UserDB.ByRemember(rememberHash)
 }
 
 var _ UserDB = &userGorm{}
