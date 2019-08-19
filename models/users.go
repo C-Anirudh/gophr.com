@@ -23,11 +23,12 @@ var (
 
 	// ErrInvalidPassword is a custom error we return when the user enters an invalid password in login page
 	ErrInvalidPassword = errors.New("models: incorrect password provided")
-
-	userPwPepper = "secret-random-string"
 )
 
-const hmacSecretKey = "secret-hmac-key"
+const (
+	hmacSecretKey = "secret-hmac-key"
+	userPwPepper  = "secret-random-string"
+)
 
 // User is the database model for our customer
 type User struct {
@@ -71,8 +72,7 @@ type userService struct {
 }
 
 type userGorm struct {
-	db   *gorm.DB
-	hmac hash.HMAC
+	db *gorm.DB
 }
 
 type userValidator struct {
@@ -86,10 +86,8 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 		return nil, err
 	}
 	db.LogMode(true)
-	hmac := hash.NewHMAC(hmacSecretKey)
 	return &userGorm{
-		db:   db,
-		hmac: hmac,
+		db: db,
 	}, nil
 }
 
@@ -105,16 +103,35 @@ func NewUserService(connectionInfo string) (UserService, error) {
 		UserDB: ug,
 	}
 	return &userService{
-		UserDB: &userValidator{
-			UserDB: uv,
-		},
+		UserDB: uv,
 	}, nil
 }
 
-// Close is a function that is used to close the connection with the db
-func (ug *userGorm) Close() error {
-	return ug.db.Close()
+// Authenticate is used to vet users
+func (us *userService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+userPwPepper))
+	switch err {
+	case nil:
+		return foundUser, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	default:
+		return nil, err
+	}
 }
+
+/*
+	********************************
+	********************************
+	Start of functions related to db
+	********************************
+	********************************
+*/
 
 // ByID is used to search a user by ID from the db
 func (ug *userGorm) ByID(id uint) (*User, error) {
@@ -135,25 +152,13 @@ func (ug *userGorm) DestructiveReset() error {
 	return ug.AutoMigrate()
 }
 
+// Close is a function that is used to close the connection with the db
+func (ug *userGorm) Close() error {
+	return ug.db.Close()
+}
+
 // Create is used to add a new user
 func (ug *userGorm) Create(user *User) error {
-	pwBytes := []byte(user.Password + userPwPepper)
-	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	user.PasswordHash = string(hashedBytes)
-	user.Password = ""
-
-	if user.Remember == "" {
-		token, err := rand.RememberToken()
-		if err != nil {
-			return err
-		}
-		user.Remember = token
-	}
-	user.RememberHash = ug.hmac.Hash(user.Remember)
-
 	return ug.db.Create(user).Error
 }
 
@@ -178,17 +183,11 @@ func (ug *userGorm) ByEmail(email string) (*User, error) {
 
 // Update is used to update user data in the db
 func (ug *userGorm) Update(user *User) error {
-	if user.Remember != "" {
-		user.RememberHash = ug.hmac.Hash(user.Remember)
-	}
 	return ug.db.Save(user).Error
 }
 
 // Delete is used to delete a user from the db
 func (ug *userGorm) Delete(id uint) error {
-	if id == 0 {
-		return ErrInvalidID
-	}
 	user := User{Model: gorm.Model{ID: id}}
 	return ug.db.Delete(&user).Error
 }
@@ -201,24 +200,6 @@ func (ug *userGorm) AutoMigrate() error {
 	return nil
 }
 
-// Authenticate is used to vet users
-func (us *userService) Authenticate(email, password string) (*User, error) {
-	foundUser, err := us.ByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+userPwPepper))
-	switch err {
-	case nil:
-		return foundUser, nil
-	case bcrypt.ErrMismatchedHashAndPassword:
-		return nil, ErrInvalidPassword
-	default:
-		return nil, err
-	}
-}
-
 // ByRemember is used to search a user by remember token from the db
 func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	var user User
@@ -229,10 +210,58 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	return &user, nil
 }
 
+/*
+	*****************************
+	*****************************
+	Start of validation functions
+	*****************************
+	*****************************
+*/
+
+// Validation code for ByRemember
 func (uv *userValidator) ByRemember(token string) (*User, error) {
 	rememberHash := uv.hmac.Hash(token)
 	return uv.UserDB.ByRemember(rememberHash)
 }
 
+// Validation code for Create
+func (uv *userValidator) Create(user *User) error {
+	pwBytes := []byte(user.Password + userPwPepper)
+	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = string(hashedBytes)
+	user.Password = ""
+
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+	user.RememberHash = uv.hmac.Hash(user.Remember)
+	return uv.UserDB.Create(user)
+}
+
+// Validation code for Update
+func (uv *userValidator) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = uv.hmac.Hash(user.Remember)
+	}
+	return uv.UserDB.Update(user)
+}
+
+// Validation code for Delete
+func (uv *userValidator) Delete(id uint) error {
+	if id == 0 {
+		return ErrInvalidID
+	}
+	return uv.UserDB.Delete(id)
+}
+
+// simple statements to check whether the interface is implemented properly
+// will give error in compile time, if not implemented properly
 var _ UserDB = &userGorm{}
 var _ UserService = &userService{}
