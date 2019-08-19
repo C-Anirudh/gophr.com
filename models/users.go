@@ -222,16 +222,17 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 
 // Validation code for ByRemember
 func (uv *userValidator) ByRemember(token string) (*User, error) {
-	rememberHash := uv.hmac.Hash(token)
-	return uv.UserDB.ByRemember(rememberHash)
+	user := User{
+		Remember: token,
+	}
+	if err := runUserValFns(&user, uv.hmacRemember); err != nil {
+		return nil, err
+	}
+	return uv.UserDB.ByRemember(user.RememberHash)
 }
 
 // Validation code for Create
 func (uv *userValidator) Create(user *User) error {
-	if err := runUserValFns(user, uv.bcryptPassword); err != nil {
-		return err
-	}
-
 	if user.Remember == "" {
 		token, err := rand.RememberToken()
 		if err != nil {
@@ -239,17 +240,23 @@ func (uv *userValidator) Create(user *User) error {
 		}
 		user.Remember = token
 	}
-	user.RememberHash = uv.hmac.Hash(user.Remember)
+
+	err := runUserValFns(user,
+		uv.bcryptPassword,
+		uv.hmacRemember)
+	if err != nil {
+		return err
+	}
 	return uv.UserDB.Create(user)
 }
 
 // Validation code for Update
 func (uv *userValidator) Update(user *User) error {
-	if err := runUserValFns(user, uv.bcryptPassword); err != nil {
+	err := runUserValFns(user,
+		uv.bcryptPassword,
+		uv.hmacRemember)
+	if err != nil {
 		return err
-	}
-	if user.Remember != "" {
-		user.RememberHash = uv.hmac.Hash(user.Remember)
 	}
 	return uv.UserDB.Update(user)
 }
@@ -262,6 +269,14 @@ func (uv *userValidator) Delete(id uint) error {
 	return uv.UserDB.Delete(id)
 }
 
+/*
+	******************************
+	******************************
+	Re-usable validation functions
+	******************************
+	******************************
+*/
+
 func (uv *userValidator) bcryptPassword(user *User) error {
 	if user.Password == "" { // to check whether the password has been updated
 		return nil
@@ -273,6 +288,14 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 	}
 	user.PasswordHash = string(hashedBytes)
 	user.Password = ""
+	return nil
+}
+
+func (uv *userValidator) hmacRemember(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+	user.RememberHash = uv.hmac.Hash(user.Remember)
 	return nil
 }
 
