@@ -34,6 +34,12 @@ var (
 
 	// ErrEmailTaken is a custom error we return when create or update is called with an email address that is already in use
 	ErrEmailTaken = errors.New("models: email address is already taken")
+
+	// ErrPasswordTooShort is a custom error we return when the password set at account creation is too short
+	ErrPasswordTooShort = errors.New("models: password must be atleast 8 characters long")
+
+	// ErrPasswordRequired is a custom error we return when user tries to create an account without setting a password
+	ErrPasswordRequired = errors.New("models: password is required")
 )
 
 const (
@@ -251,7 +257,10 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 // Validation code for Create
 func (uv *userValidator) Create(user *User) error {
 	err := runUserValFns(user,
+		uv.passwordRequired,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
+		uv.passwordHashRequired,
 		uv.setRememberIfUnset,
 		uv.hmacRemember,
 		uv.requireEmail,
@@ -267,7 +276,9 @@ func (uv *userValidator) Create(user *User) error {
 // Validation code for Update
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValFns(user,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
+		uv.passwordHashRequired,
 		uv.hmacRemember,
 		uv.requireEmail,
 		uv.normalizeEmail,
@@ -335,6 +346,30 @@ func (uv *userValidator) emailIsAvail(user *User) error {
 	}
 	if user.ID != existing.ID {
 		return ErrEmailTaken
+	}
+	return nil
+}
+
+func (uv *userValidator) passwordMinLength(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
+	if len(user.Password) < 8 {
+		return ErrPasswordTooShort
+	}
+	return nil
+}
+
+func (uv *userValidator) passwordRequired(user *User) error {
+	if user.Password == "" {
+		return ErrPasswordRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) passwordHashRequired(user *User) error {
+	if user.PasswordHash == "" {
+		return ErrPasswordRequired
 	}
 	return nil
 }
