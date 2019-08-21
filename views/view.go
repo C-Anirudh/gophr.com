@@ -17,10 +17,29 @@ var (
 	TemplateExt = ".gohtml"
 )
 
+const (
+	AlertLvlError   = "danger"
+	AlertLvlWarning = "warning"
+	AlertLvlInfo    = "info"
+	AlertLvlSuccess = "success"
+
+	AlertMsgGeneric = "Something went wrong. Please try again, and contact us if problem persists."
+)
+
 // View is a struct that holds the processed template of a static page
 type View struct {
 	Template *template.Template
 	Layout   string
+}
+
+type Alert struct {
+	Level   string
+	Message string
+}
+
+type Data struct {
+	Alert *Alert
+	Yield interface{}
 }
 
 func layoutFiles() []string {
@@ -61,6 +80,14 @@ func NewView(layout string, files ...string) *View {
 // Render executes the parsed template that is passed to it
 func (v *View) Render(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html")
+	switch data.(type) {
+	case Data:
+
+	default:
+		data = Data{
+			Yield: data,
+		}
+	}
 	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
