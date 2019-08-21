@@ -40,6 +40,12 @@ var (
 
 	// ErrPasswordRequired is a custom error we return when user tries to create an account without setting a password
 	ErrPasswordRequired = errors.New("models: password is required")
+
+	// ErrRememberRequired is a custom error we return when create or update is attempted without a user remember token hash
+	ErrRememberRequired = errors.New("models: remember token is required")
+
+	// ErrRememberTooShort is a custom error we return when the remember token is not 32 bytes long
+	ErrRememberTooShort = errors.New("models: remember token must be atleast 32 bytes")
 )
 
 const (
@@ -262,7 +268,9 @@ func (uv *userValidator) Create(user *User) error {
 		uv.bcryptPassword,
 		uv.passwordHashRequired,
 		uv.setRememberIfUnset,
+		uv.rememberMinBytes,
 		uv.hmacRemember,
+		uv.rememberHashRequired,
 		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.emailFormat,
@@ -279,7 +287,9 @@ func (uv *userValidator) Update(user *User) error {
 		uv.passwordMinLength,
 		uv.bcryptPassword,
 		uv.passwordHashRequired,
+		uv.rememberMinBytes,
 		uv.hmacRemember,
+		uv.rememberHashRequired,
 		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.emailFormat,
@@ -370,6 +380,27 @@ func (uv *userValidator) passwordRequired(user *User) error {
 func (uv *userValidator) passwordHashRequired(user *User) error {
 	if user.PasswordHash == "" {
 		return ErrPasswordRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) rememberHashRequired(user *User) error {
+	if user.RememberHash == "" {
+		return ErrRememberRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) rememberMinBytes(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+	n, err := rand.NBytes(user.Remember)
+	if err != nil {
+		return err
+	}
+	if n < 32 {
+		return ErrRememberTooShort
 	}
 	return nil
 }
